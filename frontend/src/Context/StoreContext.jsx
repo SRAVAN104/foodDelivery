@@ -1,11 +1,21 @@
 import { createContext, useEffect, useState } from "react";
-import { food_list, menu_list } from "../assets/assets";
+import { food_list, menu_list } from "../assets/assets.js";
 import axios from "axios";
 export const StoreContext = createContext(null);
 
 const StoreContextProvider = (props) => {
 
-    const url = import.meta.env.BACKEND_URL ||"http://localhost:4000"
+    const loadConfig = () => {
+        if (window._env_ && window._env_.VITE_BACKEND_URL) {
+            setUrl(window._env_.VITE_BACKEND_URL);
+            // console.log("API URL loaded from config.js:", window._env_.VITE_BACKEND_URL);
+        } else {
+            console.error("Error loading config.js");
+            setUrl("http://localhost:4000"); // Fallback if config fails
+        }
+    };
+
+    const [url, setUrl] = useState("");
     const [food_list, setFoodList] = useState([]);
     const [cartItems, setCartItems] = useState({});
     const [token, setToken] = useState("")
@@ -52,15 +62,17 @@ const StoreContextProvider = (props) => {
     }
 
     useEffect(() => {
+        loadConfig();
+        fetchFoodList(); 
         async function loadData() {
             await fetchFoodList();
             if (localStorage.getItem("token")) {
-                setToken(localStorage.getItem("token"))
-                await loadCartData({ token: localStorage.getItem("token") })
+                setToken(localStorage.getItem("token"));
+                await loadCartData({ token: localStorage.getItem("token") });
             }
         }
-        loadData()
-    }, [])
+        loadData();
+    }, []);
 
     const contextValue = {
         url,
